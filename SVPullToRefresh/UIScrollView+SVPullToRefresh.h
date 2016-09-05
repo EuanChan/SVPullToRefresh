@@ -23,6 +23,6 @@ typedef NS_ENUM(NSUInteger, SVPullToRefreshState) {
 
 - (void)addRefreshControlWithActionHandler:(void (^)(void))actionHandler;
 
-@property (nonatomic, strong, readonly) ODRefreshControl *refreshControl;
+@property (nonatomic, strong, readonly) id refreshControlOD;
 
 @end

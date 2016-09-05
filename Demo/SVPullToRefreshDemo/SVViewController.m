@@ -60,7 +60,7 @@
         [weakSelf.tableView insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:0]] withRowAnimation:UITableViewRowAnimationBottom];
         [weakSelf.tableView endUpdates];
         
-        [weakSelf.tableView.refreshControl endRefreshing];
+        [weakSelf.tableView.refreshControlOD endRefreshing];
     });
 }
 

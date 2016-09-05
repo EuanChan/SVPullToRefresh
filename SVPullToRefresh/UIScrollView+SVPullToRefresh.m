@@ -18,70 +18,97 @@
 #pragma mark - UIScrollView (SVPullToRefresh)
 #import <objc/runtime.h>
 
-typedef void (^RefreshControlBlock)();
+typedef void (^ODRefreshControlBlock)();
 
 static char UIScrollViewRefreshControlView;
-static char UIScrollViewRefreshActionBlock;
+static char UIScrollViewODRefreshActionBlock;
 
 @interface UIScrollView ()
 
-//@property (nonatomic, strong, readwrite) ODRefreshControl *refreshControl;
-@property (nonatomic, copy) RefreshControlBlock refreshActionBlock;
+@property (nonatomic, copy) ODRefreshControlBlock ODRefreshActionBlock;
 
 @end
 
 @implementation UIScrollView (SVPullToRefresh)
 
-@dynamic refreshControl;
-
 - (void)addRefreshControlWithActionHandler:(void (^)(void))actionHandler;
 {
-    if (!self.refreshControl) {
-        self.refreshControl = [[ODRefreshControl alloc] initInScrollView:self];
-        self.refreshActionBlock = actionHandler;
-        [self.refreshControl addTarget:self action:@selector(refreshControlDidBeginRefreshing:) forControlEvents:UIControlEventValueChanged];
+    if (![self respondsToSelector:@selector(refreshControl)]) {
+        if (!self.refreshControlOD) {
+            self.refreshControlOD = [[ODRefreshControl alloc] initInScrollView:self];
+            self.ODRefreshActionBlock = actionHandler;
+            [self.refreshControlOD addTarget:self action:@selector(od_refreshControlDidBeginRefreshing:) forControlEvents:UIControlEventValueChanged];
+        }
+    }
+    else {
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
+        self.refreshControl = [[UIRefreshControl alloc] init];
+        self.ODRefreshActionBlock = actionHandler;
+        [self.refreshControl addTarget:self action:@selector(od_refreshControlDidBeginRefreshing:) forControlEvents:UIControlEventValueChanged];
+#endif
+#endif
     }
 }
 
-- (void)refreshControlDidBeginRefreshing:(ODRefreshControl *)refreshControl
+- (void)od_refreshControlDidBeginRefreshing:(ODRefreshControl *)refreshControl
 {
-    if (self.refreshActionBlock) {
-        self.refreshActionBlock();
-        
+    if (self.ODRefreshActionBlock) {
+        self.ODRefreshActionBlock();
+
         NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
         [formatter setDateFormat:@"MMM d, h:mm a"];
-        
-//      NSString *updated = [NSString stringWithFormat:NSLocalizedString(@"Last Updated: %@",), newLastUpdatedDate?[self.dateFormatter stringFromDate:newLastUpdatedDate]:NSLocalizedString(@"Never",)];
-//        refreshControl.attributedTitle = [[NSAttributedString alloc] initWithString:updated];
+
+            //      NSString *updated = [NSString stringWithFormat:NSLocalizedString(@"Last Updated: %@",), newLastUpdatedDate?[self.dateFormatter stringFromDate:newLastUpdatedDate]:NSLocalizedString(@"Never",)];
+            //        refreshControl.attributedTitle = [[NSAttributedString alloc] initWithString:updated];
     }
 }
 
-- (void)setRefreshControl:(ODRefreshControl *)refreshControl
+- (void)setRefreshControlOD:(id)refreshControl
 {
-    [self willChangeValueForKey:@"RefreshControll"];
-    objc_setAssociatedObject(self, &UIScrollViewRefreshControlView,
-                             refreshControl,
-                             OBJC_ASSOCIATION_ASSIGN);
-    [self didChangeValueForKey:@"RefreshControll"];
+    if (![self respondsToSelector:@selector(refreshControl)]) {
+        [self willChangeValueForKey:@"RefreshControll_OD"];
+        objc_setAssociatedObject(self, &UIScrollViewRefreshControlView,
+                                 refreshControl,
+                                 OBJC_ASSOCIATION_ASSIGN);
+        [self didChangeValueForKey:@"RefreshControll_OD"];
+    }
+    else {
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
+        self.refreshControl = refreshControl;
+#endif
+#endif
+    }
 }
 
-- (ODRefreshControl *)refreshControl
+- (id)refreshControlOD
 {
-    return objc_getAssociatedObject(self, &UIScrollViewRefreshControlView);
+    if (![self respondsToSelector:@selector(refreshControl)]) {
+        return objc_getAssociatedObject(self, &UIScrollViewRefreshControlView);
+    }
+    else {
+#ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
+        return self.refreshControl;
+#endif
+#endif
+    }
+    return nil;
 }
 
-- (void)setRefreshActionBlock:(RefreshControlBlock)refreshActionBlock
+- (void)setODRefreshActionBlock:(ODRefreshControlBlock)refreshActionBlock
 {
-    [self willChangeValueForKey:@"RefreshControll"];
-    objc_setAssociatedObject(self, &UIScrollViewRefreshActionBlock,
+    [self willChangeValueForKey:@"RefreshControll_OD"];
+    objc_setAssociatedObject(self, &UIScrollViewODRefreshActionBlock,
                              refreshActionBlock,
                              OBJC_ASSOCIATION_COPY);
-    [self didChangeValueForKey:@"RefreshControll"];
+    [self didChangeValueForKey:@"RefreshControll_OD"];
 }
 
-- (RefreshControlBlock)refreshActionBlock
+- (ODRefreshControlBlock)ODRefreshActionBlock
 {
-    return objc_getAssociatedObject(self, &UIScrollViewRefreshActionBlock);
+    return objc_getAssociatedObject(self, &UIScrollViewODRefreshActionBlock);
 }
 
 @end
